@@ -3,6 +3,7 @@ import { api } from "./api";
 export interface AuthUser {
   id: number;
   email: string;
+  plan_type: string;
 }
 
 export interface LoginResponse {

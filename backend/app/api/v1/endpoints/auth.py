@@ -78,7 +78,8 @@ def get_me(
 ):
     return {
         "id": current_user.id,
-        "email": current_user.email
+        "email": current_user.email,
+        "plan_type": current_user.plan_type
     }
 
 
