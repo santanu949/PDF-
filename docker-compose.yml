@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pdfflow_postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: pdfflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: pdfflow_redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./PdfKit_backend-main/PdfKit_backend-main
+      dockerfile: Dockerfile
+    container_name: pdfflow_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind mount the backend code for live reload
+      - ./PdfKit_backend-main/PdfKit_backend-main/backend:/app/backend
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/pdfflow
+      - REDIS_URL=redis://redis:6379/0
+      # Use an env file for secrets
+    env_file:
+      - ./PdfKit_backend-main/PdfKit_backend-main/backend/.env
+    depends_on:
+      - postgres
+      - redis
+
+  celery_worker:
+    build:
+      context: ./PdfKit_backend-main/PdfKit_backend-main
+      dockerfile: Dockerfile
+    container_name: pdfflow_celery_worker
+    command: ["celery", "-A", "app.core.celery_app", "worker", "--loglevel=info"]
+    volumes:
+      # Bind mount for live reload
+      - ./PdfKit_backend-main/PdfKit_backend-main/backend:/app/backend
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/pdfflow
+      - REDIS_URL=redis://redis:6379/0
+    env_file:
+      - ./PdfKit_backend-main/PdfKit_backend-main/backend/.env
+    depends_on:
+      - postgres
+      - redis
+      - backend
+
+  frontend:
+    build:
+      context: ./pdf_project-archita
+      dockerfile: Dockerfile
+    container_name: pdfflow_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      # Bind mount for live reload
+      - ./pdf_project-archita:/app
+      # Avoid overwriting node_modules
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    env_file:
+      - ./pdf_project-archita/.env.local
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
