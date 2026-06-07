@@ -17,7 +17,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend application code
-COPY backend/ ./backend/
+COPY . ./backend/
 WORKDIR /app/backend
 
 # Set default command (will be overridden by docker-compose for celery worker)

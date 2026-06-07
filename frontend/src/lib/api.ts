@@ -29,13 +29,13 @@ api.interceptors.response.use(
       const token = localStorage.getItem(TOKEN_KEY);
       if (token) {
         localStorage.removeItem(TOKEN_KEY);
-        // Redirect to signin if on a protected page
-        if (
-          !window.location.pathname.startsWith("/signin") &&
-          !window.location.pathname.startsWith("/signup")
-        ) {
-          window.location.href = "/signin";
-        }
+      }
+      // Redirect to signin if on a protected page
+      if (
+        !window.location.pathname.startsWith("/signin") &&
+        !window.location.pathname.startsWith("/signup")
+      ) {
+        window.location.href = "/signin";
       }
     }
     return Promise.reject(error);
